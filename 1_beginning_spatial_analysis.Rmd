@@ -1,7 +1,7 @@
 ---
 title: "LAGOS Spatial Analysis"
-author: "Matthew Ross"
-date: "9/11/2019"
+author: "Tad Trimarco"
+date: "2/22/2022"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -54,9 +54,7 @@ lake_centers <- lagos$locus
 #View the full dataset
 #View(lake_centers %>% slice(1:100))
 
-spatial_lakes <- st_as_sf(lake_centers,coords=c('nhd_long','nhd_lat'),
-                          crs=4326) %>%
-  st_transform(2163)
+ 
 
 #Subset for plotting
 subset_spatial <- spatial_lakes %>%
@@ -99,19 +97,21 @@ minnesota_lakes %>%
 ## 1) Show a map outline of Iowa and Illinois (similar to Minnesota map upstream)
 
 ```{r}
-
-
+Iowa_Illinois <- states %>%
+  filter(name == 'Iowa'| name =='Illinois') %>%
+  st_transform(2163)
+mapview(Iowa_Illinois)
 
 ```
 
 
 
-## 2) Subset LAGOS data to these sites, how many sites are in Illinois and Iowa
-combined? How does this compare to Minnesota?
+## 2) Subset LAGOS data to these sites, how many sites are in Illinois and Iowa combined? How does this compare to Minnesota?
 
 ```{r}
-
+ii_lakes <- spatial_lakes[Iowa_Illinois,]
 ```
+There are just 16,466 lakes in Iowa and Illinois combined, as opposed to the 29,038 lakes in Minnesota.
 
 
 ## 3) What is the distribution of lake size in Iowa vs. Minnesota?
@@ -120,20 +120,29 @@ combined? How does this compare to Minnesota?
 y axis (check out geom_histogram)
 
 ```{r}
+ggplot(data = ii_lakes) +
+    geom_histogram(aes(x=lake_area_ha), binwidth = 1500)
 
+ii_lakes %>%
+  arrange(-lake_area_ha) %>%
+  slice(1:1000) %>%
+  ggplot() +
+    geom_histogram(aes(x=lake_area_ha), binwidth = 1500)
 
 ```
-
+The vast vast majority of lakes are small, with a lake area less than 2500ha. However, there are a few larger lakes, that make the histogram difficult to view effectively. For better visualization, I have created two histograms, the second includes only the smallest 1000 lakes by size.
 
 ## 4) Make an interactive plot of lakes in Iowa and Illinois and color them
 by lake area in hectares
 
 ```{r}
-
+ii_lakes %>%
+    slice(1:1000) %>%
+  mapview(.,zcol = 'lake_area_ha')
 ```
 
 
 ## 5) What other data sources might we use to understand how reservoirs and 
 natural lakes vary in size in these three states? 
 
-
+It would also be valuable to have average depth and maximum depth measurements to better understand how large these lakes are. It may also be valuable to estimate how many rivers flow into the lake or flow out, though this isn't a perfect approximation of size, and may convey more about hydrologic connectivity.

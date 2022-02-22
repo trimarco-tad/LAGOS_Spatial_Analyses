@@ -1,7 +1,7 @@
 ---
 title: "Lake Water Quality Analysis"
-author: "Matthew Ross"
-date: "9/17/2019"
+author: "Tad Trimarco"
+date: "2/22/2022"
 output: html_document
 ---
 
@@ -126,13 +126,13 @@ sites with at least 200 observations?
 - Here, I just want a plot of chla vs secchi for all sites 
 
 ```{r}
-#Your code here
-
+ggplot(chla_secchi_200, aes(x = chla, y = secchi)) + 
+  geom_point()
 ```
 
 
 ## Why might this be the case? 
-
+It appears as though there isn't a strong trend between cholorophyll-a and secchi disk readings, though in general as chlorophyll-a increases, secchi disk depth decreases. This is likely because there a many different qater quality concerns that can cause low secchi disk readings, and cholorophyll-a is just one of them. As a result, there aren't any high-chlorophyll-a and high-secchi disk readings paired together, which indicates that if chlorophyll-a is high, secchi desk readings will be lower, but there are plenty low chlorophyll-a readings with low secchi disk readings, likely because some other water quality consitituent is impairing visibility.
 
 ## 2) What states have the most data? 
 
@@ -141,7 +141,20 @@ number of counts per site.
 
 ```{r}
 
-## Your code here
+all_nutr <- nutr %>%
+  mutate(sampledate = as.character(sampledate) %>% ymd(.))
+
+all_nutr_count <- all_nutr %>%
+  group_by(lagoslakeid) %>%
+  mutate(count = n()) 
+
+spatial_nutr <- inner_join(spatial_lakes,all_nutr_count %>%
+                              distinct(lagoslakeid, .keep_all = T),
+                              by='lagoslakeid')
+
+mapview(spatial_nutr)
+
+
 ```
 
 
@@ -149,7 +162,10 @@ number of counts per site.
 data. 
 
 ```{r}
-## Your code here
+states <- us_states()
+states <- states %>%
+        st_transform(2163)
+
 ```
 
 
@@ -157,7 +173,17 @@ data.
 state and arrange that data from most to least toatl observations per state. 
 
 ```{r}
-## Your code here. 
+nutr_by_state <- spatial_nutr %>%
+  # Take summary by lake id
+  group_by(lagoslakeid) %>%
+  # take mean chl_a per lake id
+  summarize(mean_chl = mean(chla,na.rm=T),
+            mean_secchi=mean(secchi,na.rm=T)) %>%
+  #Get rid of NAs
+  filter(!is.na(mean_chl),
+         !is.na(mean_secchi)) %>%
+  # Take the log base 10 of the mean_chl
+  mutate(log10_mean_chl = log10(mean_chl))
 ```
 
 ##3 Is there a spatial pattern in Secchi disk depth for lakes with at least 200 
