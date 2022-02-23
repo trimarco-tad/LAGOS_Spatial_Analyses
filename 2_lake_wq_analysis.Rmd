@@ -37,7 +37,8 @@ lake_centers <- lagos$locus
 
 # Make an sf object 
 spatial_lakes <- st_as_sf(lake_centers,coords=c('nhd_long','nhd_lat'),
-                          crs=4326)
+                          crs=4326) %>%
+   st_transform(2163)
 
 #Grab the water quality data
 nutr <- lagos$epi_nutr
@@ -141,20 +142,13 @@ number of counts per site.
 
 ```{r}
 
-all_nutr <- nutr %>%
-  mutate(sampledate = as.character(sampledate) %>% ymd(.))
-
-all_nutr_count <- all_nutr %>%
-  group_by(lagoslakeid) %>%
-  mutate(count = n()) 
-
-spatial_nutr <- inner_join(spatial_lakes,all_nutr_count %>%
-                              distinct(lagoslakeid, .keep_all = T),
-                              by='lagoslakeid')
-
-mapview(spatial_nutr)
+nutr_spatial <- inner_join(nutr, spatial_lakes, by = "lagoslakeid")
 
 
+states_lagos <- lagos$state %>%
+  select(-state_pct_in_nwi, -state_ha_in_nwi,-state_ha)
+
+state_nutr <- inner_join(nutr_spatial,states_lagos, by = "state_zoneid")
 ```
 
 
@@ -166,32 +160,34 @@ states <- us_states()
 states <- states %>%
         st_transform(2163)
 
+states_and_nutrients <- inner_join(state_nutr,states,by = "state_name")
+
 ```
 
 
 ### 2c) Then you will want to group by state and sum all the observations in that
-state and arrange that data from most to least toatl observations per state. 
+state and arrange that data from most to least total observations per state. 
 
 ```{r}
-nutr_by_state <- spatial_nutr %>%
-  # Take summary by lake id
-  group_by(lagoslakeid) %>%
-  # take mean chl_a per lake id
-  summarize(mean_chl = mean(chla,na.rm=T),
-            mean_secchi=mean(secchi,na.rm=T)) %>%
-  #Get rid of NAs
-  filter(!is.na(mean_chl),
-         !is.na(mean_secchi)) %>%
-  # Take the log base 10 of the mean_chl
-  mutate(log10_mean_chl = log10(mean_chl))
+state_nutr_counts <- states_and_nutrients %>%
+    group_by(state_name) %>%
+    summarize(count=n()) %>%
+    arrange(desc(count))
+
+head(state_nutr_counts)  
 ```
+
+
+Minnesota has the greatest number of observations, with just under 360,000 nutrient samplings.
+
 
 ##3 Is there a spatial pattern in Secchi disk depth for lakes with at least 200 
 observations?
 
 ```{r}
-## Your code here
+mapview(spatial_200, zcol='secchi')
 
 ```
 
+It appears that the lakes near Minneapolis and Rhode Island have some of the most impaired secchi disk depths. However, this could also be an artifact of sampling procedures: if a lake repeatedly samples as unimpaired or doesn't have water quality concerns, it is less likely to receive funding for continued sampling beyond 200 observations. I wouldn't be surprised to find a correlation between secchi disk depth and the number of observations, as we tend to give the most funding to the most damaged water bodies.
 

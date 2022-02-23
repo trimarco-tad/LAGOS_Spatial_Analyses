@@ -28,7 +28,7 @@ library(USAboundaries) #USA states and counties
 
 ```{r data-read}
 # #Lagos download script
-LAGOSNE::lagosne_get(dest_folder = LAGOSNE:::lagos_path())
+#LAGOSNE::lagosne_get(dest_folder = LAGOSNE:::lagos_path())
 
 
 #Load in lagos
@@ -37,6 +37,10 @@ lagos <- lagosne_load()
 #Grab the lake centroid info
 lake_centers <- lagos$locus
 
+# Make an sf object 
+spatial_lakes <- st_as_sf(lake_centers,coords=c('nhd_long','nhd_lat'),
+                          crs=4326) %>%
+  st_transform(2163)
 
 
 ```
