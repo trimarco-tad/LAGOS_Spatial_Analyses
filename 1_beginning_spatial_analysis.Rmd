@@ -115,7 +115,8 @@ mapview(Iowa_Illinois)
 ```{r}
 ii_lakes <- spatial_lakes[Iowa_Illinois,]
 ```
-There are just 16,466 lakes in Iowa and Illinois combined, as opposed to the 29,038 lakes in Minnesota.
+
+There are just 16,466 lakes in Iowa and Illinois combined, as opposed to the 29,038 lakes in Minnesota.I find this to be surprising, given that Minnesota is the "Land of Ten Thousand Lakes", but there are nearly 30,000. What else don't we know about Minnesota? What are they hiding in the 19,038 lakes that don't appear in the national consciousness?
 
 
 ## 3) What is the distribution of lake size in Iowa vs. Minnesota?
@@ -134,7 +135,7 @@ ii_lakes %>%
     geom_histogram(aes(x=lake_area_ha), binwidth = 1500)
 
 ```
-The vast vast majority of lakes are small, with a lake area less than 2500ha. However, there are a few larger lakes, that make the histogram difficult to view effectively. For better visualization, I have created two histograms, the second includes only the smallest 1000 lakes by size.
+The vast majority of lakes are small, with a lake area less than 2500ha. However, there are a few larger lakes, that make the histogram difficult to view effectively. For better visualization, I have created two histograms, the second includes only the smallest 1000 lakes by size. I attempted to scale my histogram so that the distribution of small lakes could be focused on without the relatively small number of large lakes skewing the x-axis scale, but had trouble creating x-axis breaks in a histogram.
 
 ## 4) Make an interactive plot of lakes in Iowa and Illinois and color them
 by lake area in hectares
